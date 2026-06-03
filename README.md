@@ -4,7 +4,7 @@ VCMS — минимальное ядро собственного CMS-движк
 
 ## Выбранный стек
 
-- **Backend:** Node.js + NestJS (ядро сейчас вынесено в framework-agnostic TypeScript-модуль)
+- **Backend:** Node.js + NestJS поверх framework-agnostic TypeScript-ядра
 - **Frontend/admin:** React как отдельный клиент, который работает через API
 - **База данных:** MySQL
 
@@ -36,14 +36,16 @@ VCMS — минимальное ядро собственного CMS-движк
 
 ### 3. API-first подход
 
-В ядре добавлен `ApiSurface`:
+В ядре добавлен `ApiSurface`, а в `src/backend/` реализован NestJS HTTP transport layer:
 
 - REST endpoints для типов контента, материалов, блоков, медиа, пользователя и плагинов;
 - GraphQL endpoint `POST /graphql` для контентного API;
+- `ApiModule` оборачивает доменный слой `createCmsKernel`, `ContentRepository`, `MediaLibrary`, `ThemeRegistry`, `PluginManager` и `InMemoryUserService`, поэтому будущие DB-backed сервисы можно подключать за тем же API-фасадом;
 - сериализация материала в API-ресурс через `ContentRepository.toRestResource`;
-- пример GraphQL-like выборки через `ContentRepository.queryGraphQlContent`.
+- пример GraphQL-like выборки через `ContentRepository.queryGraphQlContent`;
+- CORS включается в NestJS bootstrap из `DEFAULT_HEADLESS_CONFIG.corsOrigins`.
 
-Админ-панель рассматривается как отдельный клиент в `frontend/admin/`, который подключается к `/api/*`, а не как часть серверного HTML.
+Админ-панель рассматривается как отдельный клиент в `frontend/admin/`, который подключается к `/api/*`, а не как часть серверного HTML. В dev-режиме Vite проксирует `/api` и `/graphql` на NestJS backend, а в production NestJS может отдавать собранную админку из `frontend/admin/dist` по `/admin/*`.
 
 ### 4. Система блоков для страниц
 
@@ -121,7 +123,7 @@ API для редактора включает создание черновик
 - `GET /admin/themes` — управление темами;
 - `GET /admin/themes/editor` — визуальный редактор активной темы.
 
-React-приложение админки находится в `frontend/admin/` и запускается как Vite + React + TypeScript workspace. В dev-режиме точка входа в админку: `http://localhost:5173/admin`; экран входа доступен по `http://localhost:5173/admin/login`. Клиент должен подключиться к API после добавления NestJS transport layer.
+React-приложение админки находится в `frontend/admin/` и запускается как Vite + React + TypeScript workspace. В dev-режиме точка входа в админку: `http://localhost:5173/admin`; экран входа доступен по `http://localhost:5173/admin/login`. Vite dev server проксирует `/api` и `/graphql` на `http://localhost:3000`, а NestJS backend отдает production-сборку админки из `frontend/admin/dist` по `/admin/*`.
 
 ## Публичный сайт
 
@@ -222,15 +224,32 @@ cp .env.example .env
    npm install
    ```
 
-7. Запустите админ-панель в dev-режиме:
+7. Запустите NestJS backend в dev-режиме:
+
+   ```bash
+   npm run dev:backend
+   ```
+
+   Backend слушает `http://localhost:3000`, включает CORS из `DEFAULT_HEADLESS_CONFIG` и публикует маршруты `/api/*`, `/graphql` и `/admin/*` для production-сборки админки.
+
+8. В отдельном терминале запустите админ-панель в dev-режиме:
 
    ```bash
    npm run dev:admin
    ```
 
-   Затем откройте `http://localhost:5173/admin` для dashboard или `http://localhost:5173/admin/login` для экрана входа.
+   Затем откройте `http://localhost:5173/admin` для dashboard или `http://localhost:5173/admin/login` для экрана входа. Vite проксирует API-запросы на backend.
 
-8. Запустите проверку TypeScript:
+9. Для production-режима соберите админку и запустите backend:
+
+   ```bash
+   npm run build:admin
+   npm run dev:backend
+   ```
+
+   После сборки NestJS будет отдавать React SPA по `http://localhost:3000/admin`.
+
+10. Запустите проверку TypeScript:
 
    ```bash
    npm run check
