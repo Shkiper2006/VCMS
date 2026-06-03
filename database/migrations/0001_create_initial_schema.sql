@@ -6,7 +6,7 @@ CREATE TABLE modules (
   name VARCHAR(191) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  dependencies JSON NOT NULL,
+  dependencies JSON NOT NULL DEFAULT (JSON_ARRAY()),
   api_namespace VARCHAR(255) NOT NULL,
   enabled TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,10 +23,10 @@ INSERT INTO modules (name, title, description, dependencies, api_namespace) VALU
 
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  email VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(191) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  role ENUM('admin', 'editor', 'author', 'guest') NOT NULL DEFAULT 'author',
+  name VARCHAR(191) NOT NULL,
+  role ENUM('admin','editor','author','guest') NOT NULL DEFAULT 'author',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -44,7 +44,7 @@ CREATE TABLE content_types (
   title VARCHAR(255) NOT NULL,
   description TEXT,
   collection_name VARCHAR(191) NOT NULL UNIQUE,
-  default_status ENUM('draft', 'scheduled', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  default_status ENUM('draft','scheduled','published','archived') NOT NULL DEFAULT 'draft',
   api_rest_enabled TINYINT(1) NOT NULL DEFAULT 1,
   api_graphql_enabled TINYINT(1) NOT NULL DEFAULT 1,
   public_read_enabled TINYINT(1) NOT NULL DEFAULT 1,
@@ -93,7 +93,7 @@ CREATE TABLE content_items (
   slug VARCHAR(191) NOT NULL,
   excerpt TEXT,
   body LONGTEXT NOT NULL,
-  status ENUM('draft', 'scheduled', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  status ENUM('draft','scheduled','published','archived') NOT NULL DEFAULT 'draft',
   author_id CHAR(36) NOT NULL,
   scheduled_for TIMESTAMP NULL,
   published_at TIMESTAMP NULL,
@@ -154,7 +154,7 @@ CREATE TABLE themes (
   version VARCHAR(100) NOT NULL,
   description TEXT,
   is_active TINYINT(1) NOT NULL DEFAULT 0,
-  active_theme_key TINYINT GENERATED ALWAYS AS (CASE WHEN is_active = 1 THEN 1 ELSE NULL END) STORED UNIQUE,
+  active_unique TINYINT GENERATED ALWAYS AS (CASE WHEN is_active THEN 1 ELSE NULL END) STORED,
   manifest JSON NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -185,11 +185,11 @@ CREATE TABLE plugins (
 
 CREATE TABLE api_endpoints (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-  kind ENUM('rest', 'graphql') NOT NULL,
+  kind ENUM('rest','graphql') NOT NULL,
   module_name VARCHAR(191) NOT NULL,
   method VARCHAR(20) NOT NULL,
   path VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(191) NOT NULL,
   required_permission VARCHAR(255),
   headless_ready TINYINT(1) NOT NULL DEFAULT 1,
   CONSTRAINT api_endpoints_module_fk FOREIGN KEY (module_name) REFERENCES modules(name) ON UPDATE CASCADE
@@ -199,14 +199,15 @@ CREATE TABLE headless_settings (
   id TINYINT(1) PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   enabled TINYINT(1) NOT NULL DEFAULT 1,
   admin_client_path VARCHAR(255) NOT NULL DEFAULT '/admin',
-  public_rendering ENUM('theme', 'headless', 'hybrid') NOT NULL DEFAULT 'hybrid',
-  cors_origins JSON NOT NULL,
+  public_rendering ENUM('theme','headless','hybrid') NOT NULL DEFAULT 'hybrid',
+  cors_origins JSON NOT NULL DEFAULT (JSON_ARRAY('*')),
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO headless_settings (id, cors_origins) VALUES (TRUE, JSON_ARRAY('*'));
+INSERT INTO headless_settings (id, cors_origins) VALUES (1, JSON_ARRAY('*'));
 
 CREATE INDEX content_items_status_scheduled_for_idx ON content_items (status, scheduled_for);
+CREATE UNIQUE INDEX only_one_active_theme ON themes (active_unique);
 CREATE FULLTEXT INDEX content_items_title_body_search_idx ON content_items (title, body);
 CREATE INDEX content_blocks_content_position_idx ON content_blocks (content_id, position);
 CREATE INDEX media_assets_mime_type_idx ON media_assets (mime_type);
