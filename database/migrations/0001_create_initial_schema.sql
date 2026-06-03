@@ -2,6 +2,8 @@
 -- The TypeScript domain layer currently runs in-memory, while these tables
 -- describe the persistent model expected by the future NestJS/PostgreSQL API.
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TYPE user_role AS ENUM ('admin', 'editor', 'author', 'guest');
 CREATE TYPE content_status AS ENUM ('draft', 'scheduled', 'published', 'archived');
 CREATE TYPE api_kind AS ENUM ('rest', 'graphql');
@@ -34,6 +36,14 @@ CREATE TABLE users (
   role user_role NOT NULL DEFAULT 'author',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE site_settings (
+  id BOOLEAN PRIMARY KEY DEFAULT true CHECK (id),
+  site_name TEXT NOT NULL,
+  site_description TEXT NOT NULL DEFAULT '',
+  site_url TEXT NOT NULL,
+  installed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE content_types (
