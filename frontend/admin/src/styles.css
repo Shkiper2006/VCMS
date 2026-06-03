@@ -317,3 +317,366 @@ textarea {
     gap: 14px;
   }
 }
+
+.admin-sidebar__brand:hover {
+  color: #fff;
+}
+
+.admin-sidebar__brand span:last-child {
+  display: grid;
+}
+
+.admin-sidebar__nav a {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-sidebar__icon {
+  width: 22px;
+}
+
+.admin-sidebar__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a7aaad;
+  display: grid;
+  font-size: 0.78rem;
+  gap: 4px;
+  margin-top: auto;
+  padding: 16px 8px 0;
+}
+
+.admin-sidebar__footer strong {
+  color: #fff;
+}
+
+.button-primary,
+.button-secondary,
+.toolbar-actions a,
+.table-toolbar a,
+.row-actions a,
+.resource-card a,
+.admin-topbar__actions a,
+.admin-topbar__actions button,
+.dashboard__actions a,
+.dashboard-card a,
+.login-card__submit {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  line-height: 1.2;
+  min-height: 32px;
+  padding: 7px 12px;
+}
+
+.button-primary,
+.admin-topbar__actions a,
+.admin-topbar__actions button,
+.dashboard__actions a,
+.dashboard-card a,
+.login-card__submit,
+.resource-card a {
+  background: #2271b1;
+  color: #fff;
+}
+
+.button-primary:hover,
+.admin-topbar__actions a:hover,
+.admin-topbar__actions button:hover,
+.dashboard__actions a:hover,
+.dashboard-card a:hover,
+.login-card__submit:hover,
+.resource-card a:hover {
+  background: #135e96;
+}
+
+.button-secondary,
+.toolbar-actions a,
+.table-toolbar a,
+.row-actions a {
+  background: #f6f7f7;
+  border-color: #c3c4c7;
+  color: #2271b1;
+}
+
+.button-secondary:hover,
+.toolbar-actions a:hover,
+.table-toolbar a:hover,
+.row-actions a:hover {
+  background: #fff;
+  border-color: #8c8f94;
+  color: #135e96;
+}
+
+.wp-panel {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.wp-panel__header {
+  align-items: flex-start;
+  border-bottom: 1px solid #dcdcde;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.wp-panel__header h2 {
+  font-size: 1.65rem;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+.wp-panel__header p {
+  color: #50575e;
+  margin: 0;
+}
+
+.dashboard__grid--primary {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.dashboard-card--compact {
+  padding: 16px;
+}
+
+.table-toolbar,
+.toolbar-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-toolbar {
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  color: #50575e;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.wp-table-wrap {
+  overflow-x: auto;
+}
+
+.wp-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 760px;
+  width: 100%;
+}
+
+.wp-table th,
+.wp-table td {
+  border-bottom: 1px solid #dcdcde;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.wp-table th {
+  background: #f6f7f7;
+  color: #1d2327;
+  font-weight: 700;
+}
+
+.wp-table tbody tr:hover {
+  background: #f6f7f7;
+}
+
+.wp-table small,
+.media-card span,
+.muted {
+  color: #646970;
+  display: block;
+  margin-top: 4px;
+}
+
+.wp-table code,
+.resource-card code,
+.media-card code,
+.detail-card code {
+  background: #f0f0f1;
+  border-radius: 3px;
+  color: #2c3338;
+  padding: 2px 5px;
+}
+
+.row-actions {
+  white-space: nowrap;
+}
+
+.row-actions a + a {
+  margin-left: 6px;
+}
+
+.empty-cell {
+  color: #646970;
+  text-align: center !important;
+}
+
+.notice {
+  background: #f6f7f7;
+  border-left: 4px solid #2271b1;
+  color: #2c3338;
+  padding: 12px 14px;
+}
+
+.notice--success {
+  border-left-color: #00a32a;
+}
+
+.notice--error {
+  background: #fcf0f1;
+  border-left-color: #d63638;
+  color: #8a2424;
+}
+
+.status-badge {
+  background: #f0f6fc;
+  border: 1px solid #c5d9ed;
+  border-radius: 999px;
+  color: #2271b1;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.status-badge--published {
+  background: #edfaef;
+  border-color: #b8e6bf;
+  color: #008a20;
+}
+
+.status-badge--archived {
+  background: #f6f7f7;
+  border-color: #c3c4c7;
+  color: #50575e;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(320px, 1.2fr);
+}
+
+.detail-card,
+.resource-card,
+.media-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  padding: 16px;
+}
+
+.detail-card h3,
+.detail-card h4,
+.resource-card h3 {
+  margin: 0 0 10px;
+}
+
+.detail-card dl {
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: 110px 1fr;
+  margin: 0;
+}
+
+.detail-card dt {
+  color: #646970;
+  font-weight: 700;
+}
+
+.detail-card dd {
+  margin: 0;
+}
+
+.media-upload {
+  align-items: end;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  padding: 12px;
+}
+
+.media-upload label,
+.login-card label {
+  display: grid;
+  gap: 5px;
+}
+
+.media-upload input {
+  border: 1px solid #8c8f94;
+  border-radius: 3px;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.media-grid,
+.cards-list {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.media-card {
+  display: grid;
+  gap: 10px;
+}
+
+.media-card img,
+.media-card__file {
+  align-items: center;
+  aspect-ratio: 16 / 10;
+  background: #f0f0f1;
+  color: #646970;
+  display: flex;
+  justify-content: center;
+  object-fit: cover;
+  width: 100%;
+}
+
+.resource-card {
+  display: grid;
+  gap: 12px;
+}
+
+.resource-card__meta {
+  color: #2271b1;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.field-list {
+  border-top: 1px solid #dcdcde;
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+}
+
+@media (max-width: 900px) {
+  .wp-panel__header,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wp-panel__header {
+    display: grid;
+  }
+}
