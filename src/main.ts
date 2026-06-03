@@ -255,7 +255,7 @@ export interface Tag {
   title: string;
 }
 
-export type BuiltInBlockType = 'text' | 'image' | 'gallery' | 'form';
+export type BuiltInBlockType = 'text' | 'image' | 'gallery' | 'form' | 'video';
 export type BlockType = BuiltInBlockType | `plugin:${string}`;
 
 export interface ContentBlock<TData extends Record<string, unknown> = Record<string, unknown>> {
@@ -302,6 +302,13 @@ export const BUILT_IN_BLOCKS: BlockDefinition[] = [
     description: 'Declarative form with fields and submit action.',
     providedBy: 'content',
     defaultData: { fields: [], submitLabel: 'Submit', action: 'email' },
+  },
+  {
+    type: 'video',
+    title: 'Video',
+    description: 'Embedded external video with optional caption.',
+    providedBy: 'media',
+    defaultData: { url: '', provider: 'external', caption: '' },
   },
 ];
 
@@ -567,6 +574,7 @@ export class ContentRepository {
   constructor(
     private readonly authz = new AuthorizationService(),
     private readonly contentTypes = new ContentTypeRegistry(),
+    private readonly blockRegistry = new BlockRegistry(),
   ) {}
 
   createCategory(input: Omit<Category, 'id'>, actor: User): Category {
@@ -586,6 +594,96 @@ export class ContentRepository {
   saveDraft(input: Omit<ContentItem, 'id' | 'status' | 'createdAt' | 'updatedAt'>, actor: User): ContentItem {
     this.authz.assert(actor, 'content:create');
     return this.save({ ...input, status: 'draft' }, actor);
+  }
+
+  createDraft(
+    type: ContentType,
+    actor: User,
+    input: Partial<Omit<ContentItem, 'id' | 'type' | 'status' | 'authorId' | 'createdAt' | 'updatedAt'>> = {},
+  ): ContentItem {
+    const title = input.title?.trim() || `New ${type}`;
+    const slug = input.slug?.trim() || `${type}-${Date.now()}`;
+
+    return this.saveDraft(
+      {
+        type,
+        title,
+        slug,
+        excerpt: input.excerpt,
+        body: input.body ?? '',
+        blocks: input.blocks ?? [],
+        authorId: actor.id,
+        categoryIds: input.categoryIds ?? [],
+        tagIds: input.tagIds ?? [],
+        scheduledFor: input.scheduledFor,
+        publishedAt: input.publishedAt,
+      },
+      actor,
+    );
+  }
+
+  addBlock<TData extends Record<string, unknown>>(
+    contentId: string,
+    type: BlockType,
+    actor: User,
+    data?: TData,
+    position?: number,
+  ): ContentItem {
+    const item = this.getEditable(contentId, actor);
+    const blocks = [...(item.blocks ?? [])];
+    const block = this.blockRegistry.createBlock(type, data);
+    const targetPosition = position === undefined ? blocks.length : Math.max(0, Math.min(position, blocks.length));
+    blocks.splice(targetPosition, 0, block);
+    return this.save({ ...item, blocks, status: 'draft', publishedAt: item.publishedAt }, actor);
+  }
+
+  updateBlock<TData extends Record<string, unknown>>(
+    contentId: string,
+    blockId: string,
+    actor: User,
+    data: Partial<TData>,
+  ): ContentItem {
+    const item = this.getEditable(contentId, actor);
+    let found = false;
+    const blocks = (item.blocks ?? []).map((block) => {
+      if (block.id !== blockId) {
+        return block;
+      }
+      found = true;
+      return { ...block, data: { ...block.data, ...data } };
+    });
+    if (!found) {
+      throw new Error(`Block not found: ${blockId}`);
+    }
+    return this.save({ ...item, blocks, status: 'draft', publishedAt: item.publishedAt }, actor);
+  }
+
+  removeBlock(contentId: string, blockId: string, actor: User): ContentItem {
+    const item = this.getEditable(contentId, actor);
+    const blocks = (item.blocks ?? []).filter((block) => block.id !== blockId);
+    if (blocks.length === (item.blocks ?? []).length) {
+      throw new Error(`Block not found: ${blockId}`);
+    }
+    return this.save({ ...item, blocks, status: 'draft', publishedAt: item.publishedAt }, actor);
+  }
+
+  reorderBlocks(contentId: string, blockIds: string[], actor: User): ContentItem {
+    const item = this.getEditable(contentId, actor);
+    const blocks = item.blocks ?? [];
+    const byId = new Map(blocks.map((block) => [block.id, block]));
+    if (blockIds.length !== blocks.length || blockIds.some((blockId) => !byId.has(blockId))) {
+      throw new Error('Block order must include every existing block exactly once');
+    }
+    return this.save({ ...item, blocks: blockIds.map((blockId) => byId.get(blockId)!), status: 'draft' }, actor);
+  }
+
+  preview(id: string, actor: User): Record<string, unknown> {
+    const item = this.getEditable(id, actor);
+    return {
+      ...this.toRestResource(item),
+      preview: true,
+      previewUrl: `/editor/preview/${item.type}/${item.id}`,
+    };
   }
 
   publish(id: string, actor: User, publishedAt = new Date()): ContentItem {
@@ -781,6 +879,91 @@ export class ThemeRegistry {
   }
 }
 
+export type EditorOverlayControl =
+  | 'add:block'
+  | 'panel:blocks'
+  | 'inline:text'
+  | 'media:image:upload'
+  | 'media:image:select'
+  | 'insert:video'
+  | 'delete:block';
+
+export interface ThemeEditorOverlay {
+  enabled: boolean;
+  controls: EditorOverlayControl[];
+  addButtonLabel: string;
+  blockPanelTitle: string;
+  allowedBlockTypes: BlockType[];
+  endpoints: {
+    addBlock: string;
+    updateBlock: string;
+    removeBlock: string;
+    reorderBlocks: string;
+    preview: string;
+    publish: string;
+    media: string;
+  };
+}
+
+export interface ThemeRenderResult {
+  theme?: ThemeManifest;
+  template: ThemeTemplate;
+  content: Record<string, unknown>;
+  layout?: ThemeLayout;
+  editorOverlay?: ThemeEditorOverlay;
+}
+
+export function renderContentWithTheme(
+  item: ContentItem,
+  themes: ThemeRegistry,
+  options: { editor?: boolean; preview?: boolean; blockTypes?: BlockDefinition[] } = {},
+): ThemeRenderResult {
+  const template = item.type as ThemeTemplate;
+  const allowedBlockTypes = (options.blockTypes ?? BUILT_IN_BLOCKS).map((block) => block.type);
+
+  return {
+    theme: themes.current(),
+    template,
+    content: {
+      id: item.id,
+      type: item.type,
+      title: item.title,
+      slug: item.slug,
+      excerpt: item.excerpt,
+      body: item.body,
+      blocks: item.blocks ?? [],
+      status: item.status,
+    },
+    layout: themes.getActiveLayout(template, options.preview),
+    editorOverlay: options.editor
+      ? {
+          enabled: true,
+          controls: [
+            'add:block',
+            'panel:blocks',
+            'inline:text',
+            'media:image:upload',
+            'media:image:select',
+            'insert:video',
+            'delete:block',
+          ],
+          addButtonLabel: 'Добавить',
+          blockPanelTitle: 'Панель блоков',
+          allowedBlockTypes,
+          endpoints: {
+            addBlock: `/api/content/${item.type}/${item.id}/blocks`,
+            updateBlock: `/api/content/${item.type}/${item.id}/blocks/:blockId`,
+            removeBlock: `/api/content/${item.type}/${item.id}/blocks/:blockId`,
+            reorderBlocks: `/api/content/${item.type}/${item.id}/blocks/order`,
+            preview: `/api/content/${item.type}/${item.id}/preview`,
+            publish: `/api/content/${item.type}/${item.id}/publish`,
+            media: '/api/media',
+          },
+        }
+      : undefined,
+  };
+}
+
 export class PluginManager {
   private readonly plugins = new Map<string, PluginManifest>();
 
@@ -813,6 +996,9 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
   { method: 'GET', path: '/admin/media', area: 'admin', name: 'Медиатека', requiredPermission: 'media:manage' },
   { method: 'GET', path: '/admin/themes', area: 'admin', name: 'Управление темами', requiredPermission: 'themes:manage' },
   { method: 'GET', path: '/admin/themes/editor', area: 'admin', name: 'Визуальный редактор темы', requiredPermission: 'themes:manage' },
+  { method: 'GET', path: '/editor/new/:type', area: 'admin', name: 'Новый материал в блочном редакторе', requiredPermission: 'content:create' },
+  { method: 'GET', path: '/editor/:type/:id', area: 'admin', name: 'Блочный редактор материала', requiredPermission: 'content:edit:own' },
+  { method: 'GET', path: '/editor/preview/:type/:id', area: 'admin', name: 'Предпросмотр черновика в активной теме', requiredPermission: 'content:edit:own' },
   { method: 'GET', path: '/admin/users', area: 'admin', name: 'Управление пользователями', requiredPermission: 'users:manage' },
 ];
 
@@ -829,6 +1015,13 @@ export const API_ROUTES: ApiEndpoint[] = [
   { method: 'POST', path: '/api/content/:type', area: 'api', kind: 'rest', module: 'content', name: 'Create content item', requiredPermission: 'content:create', headlessReady: true },
   { method: 'GET', path: '/api/content/:type/:slug', area: 'api', kind: 'rest', module: 'content', name: 'Read content item', headlessReady: true },
   { method: 'PATCH', path: '/api/content/:type/:id', area: 'api', kind: 'rest', module: 'content', name: 'Update content item', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'POST', path: '/api/content/:type/drafts', area: 'api', kind: 'rest', module: 'content', name: 'Create block editor draft', requiredPermission: 'content:create', headlessReady: true },
+  { method: 'POST', path: '/api/content/:type/:id/blocks', area: 'api', kind: 'rest', module: 'content', name: 'Add content block', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'PATCH', path: '/api/content/:type/:id/blocks/:blockId', area: 'api', kind: 'rest', module: 'content', name: 'Update content block data', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'DELETE', path: '/api/content/:type/:id/blocks/:blockId', area: 'api', kind: 'rest', module: 'content', name: 'Remove content block', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'PATCH', path: '/api/content/:type/:id/blocks/order', area: 'api', kind: 'rest', module: 'content', name: 'Reorder content blocks', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'GET', path: '/api/content/:type/:id/preview', area: 'api', kind: 'rest', module: 'content', name: 'Preview content draft', requiredPermission: 'content:edit:own', headlessReady: true },
+  { method: 'POST', path: '/api/content/:type/:id/publish', area: 'api', kind: 'rest', module: 'content', name: 'Publish content draft', requiredPermission: 'content:publish', headlessReady: true },
   { method: 'GET', path: '/api/blocks', area: 'api', kind: 'rest', module: 'content', name: 'List available block definitions', headlessReady: true },
   { method: 'GET', path: '/api/media', area: 'api', kind: 'rest', module: 'media', name: 'List media assets', headlessReady: true },
   { method: 'POST', path: '/api/media', area: 'api', kind: 'rest', module: 'media', name: 'Upload media asset', requiredPermission: 'media:manage', headlessReady: true },
@@ -877,7 +1070,7 @@ export function createCmsKernel(): CmsKernel {
   const users = new InMemoryUserService(authz);
   const contentTypes = new ContentTypeRegistry();
   const blocks = new BlockRegistry();
-  const content = new ContentRepository(authz, contentTypes);
+  const content = new ContentRepository(authz, contentTypes, blocks);
   const media = new MediaLibrary(authz);
   const hooks = new HookBus();
   const themes = new ThemeRegistry();
