@@ -106,6 +106,7 @@ export type Permission =
   | 'pages:manage'
   | 'media:manage'
   | 'users:manage'
+  | 'themes:manage'
   | 'site:view';
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -119,6 +120,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'pages:manage',
     'media:manage',
     'users:manage',
+    'themes:manage',
     'site:view',
   ],
   editor: [
@@ -130,6 +132,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'content:delete',
     'pages:manage',
     'media:manage',
+    'themes:manage',
     'site:view',
   ],
   author: ['admin:access', 'content:create', 'content:edit:own', 'media:manage', 'site:view'],
@@ -379,11 +382,81 @@ export class MediaLibrary {
   }
 }
 
+export type ThemeTemplate = ContentType | 'home' | 'category' | 'search';
+export type ThemeBreakpoint = 'desktop' | 'tablet' | 'mobile';
+export type ThemeEditableBlockKind = 'content' | 'slot' | 'text' | 'image' | BlockType;
+
+export interface ThemeSpacing {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export interface ThemeResponsiveSettings {
+  hidden?: boolean;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  margin?: Partial<ThemeSpacing>;
+  padding?: Partial<ThemeSpacing>;
+  order?: number;
+}
+
+export interface ThemeEditableBlock {
+  id: string;
+  template: ThemeTemplate;
+  regionId: string;
+  type: ThemeEditableBlockKind;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  order: number;
+  margin: ThemeSpacing;
+  padding: ThemeSpacing;
+  settings?: Record<string, unknown>;
+  responsive?: Partial<Record<ThemeBreakpoint, ThemeResponsiveSettings>>;
+}
+
+export interface ThemeRegion {
+  id: string;
+  template: ThemeTemplate;
+  name: string;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  order: number;
+  editable: boolean;
+  blocks: ThemeEditableBlock[];
+  responsive?: Partial<Record<ThemeBreakpoint, ThemeResponsiveSettings>>;
+}
+
+export interface ThemeLayout {
+  themeId: string;
+  template: ThemeTemplate;
+  canvas: {
+    width: number;
+    height: number;
+    breakpoint: ThemeBreakpoint;
+  };
+  regions: ThemeRegion[];
+  updatedBy?: string;
+  updatedAt?: Date;
+  previewToken?: string;
+}
+
 export interface ThemeManifest {
   name: string;
   version: string;
   description?: string;
-  templates?: Partial<Record<ContentType | 'home' | 'category' | 'search', string>>;
+  templates?: Partial<Record<ThemeTemplate, string>>;
+  regions?: ThemeRegion[];
+  editableTemplates?: Partial<Record<ThemeTemplate, ThemeLayout>>;
 }
 
 export interface PluginManifest {
@@ -654,14 +727,57 @@ export class HookBus {
 
 export class ThemeRegistry {
   private activeTheme?: ThemeManifest;
+  private readonly manifests = new Map<string, ThemeManifest>();
+  private readonly activeLayouts = new Map<ThemeTemplate, ThemeLayout>();
+  private readonly previewLayouts = new Map<ThemeTemplate, ThemeLayout>();
+
+  register(manifest: ThemeManifest): ThemeManifest {
+    this.manifests.set(manifest.name, manifest);
+    return manifest;
+  }
 
   activate(manifest: ThemeManifest): ThemeManifest {
+    this.register(manifest);
     this.activeTheme = manifest;
+    this.activeLayouts.clear();
+    Object.entries(manifest.editableTemplates ?? {}).forEach(([template, layout]) => {
+      if (layout) {
+        this.activeLayouts.set(template as ThemeTemplate, layout);
+      }
+    });
     return manifest;
+  }
+
+  list(): ThemeManifest[] {
+    return [...this.manifests.values()];
   }
 
   current(): ThemeManifest | undefined {
     return this.activeTheme;
+  }
+
+  getActiveLayout(template: ThemeTemplate = 'home', preview = false): ThemeLayout | undefined {
+    return (preview ? this.previewLayouts.get(template) : undefined) ??
+      this.activeLayouts.get(template) ??
+      this.activeTheme?.editableTemplates?.[template];
+  }
+
+  updateActiveLayout(template: ThemeTemplate, layout: ThemeLayout, actor: User, preview = false): ThemeLayout {
+    const updated = {
+      ...layout,
+      template,
+      themeId: layout.themeId || this.activeTheme?.name || 'active',
+      updatedBy: actor.id,
+      updatedAt: new Date(),
+      previewToken: preview ? layout.previewToken ?? makeId('preview') : undefined,
+    };
+    if (preview) {
+      this.previewLayouts.set(template, updated);
+    } else {
+      this.activeLayouts.set(template, updated);
+      this.previewLayouts.delete(template);
+    }
+    return updated;
   }
 }
 
@@ -695,6 +811,8 @@ export const ADMIN_ROUTES: RouteDefinition[] = [
   { method: 'GET', path: '/admin/pages', area: 'admin', name: 'Управление страницами', requiredPermission: 'pages:manage' },
   { method: 'GET', path: '/admin/content-types', area: 'admin', name: 'Схемы типов контента', requiredPermission: 'admin:access' },
   { method: 'GET', path: '/admin/media', area: 'admin', name: 'Медиатека', requiredPermission: 'media:manage' },
+  { method: 'GET', path: '/admin/themes', area: 'admin', name: 'Управление темами', requiredPermission: 'themes:manage' },
+  { method: 'GET', path: '/admin/themes/editor', area: 'admin', name: 'Визуальный редактор темы', requiredPermission: 'themes:manage' },
   { method: 'GET', path: '/admin/users', area: 'admin', name: 'Управление пользователями', requiredPermission: 'users:manage' },
 ];
 
@@ -716,6 +834,9 @@ export const API_ROUTES: ApiEndpoint[] = [
   { method: 'POST', path: '/api/media', area: 'api', kind: 'rest', module: 'media', name: 'Upload media asset', requiredPermission: 'media:manage', headlessReady: true },
   { method: 'GET', path: '/api/users/me', area: 'api', kind: 'rest', module: 'users', name: 'Current user profile', requiredPermission: 'admin:access', headlessReady: true },
   { method: 'GET', path: '/api/plugins', area: 'api', kind: 'rest', module: 'plugins', name: 'List plugins', requiredPermission: 'admin:access', headlessReady: true },
+  { method: 'GET', path: '/api/themes', area: 'api', kind: 'rest', module: 'themes', name: 'List themes', requiredPermission: 'themes:manage', headlessReady: true },
+  { method: 'GET', path: '/api/themes/active/layout', area: 'api', kind: 'rest', module: 'themes', name: 'Read active theme layout', requiredPermission: 'themes:manage', headlessReady: true },
+  { method: 'PATCH', path: '/api/themes/active/layout', area: 'api', kind: 'rest', module: 'themes', name: 'Update active theme layout', requiredPermission: 'themes:manage', headlessReady: true },
   { method: 'POST', path: '/graphql', area: 'api', kind: 'graphql', module: 'content', name: 'GraphQL content API', headlessReady: true },
 ];
 
