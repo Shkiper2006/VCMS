@@ -125,7 +125,7 @@ CREATE TABLE content_blocks (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (content_id, position),
   CHECK (
-    type IN ('text', 'image', 'gallery', 'form')
+    type IN ('text', 'image', 'gallery', 'form', 'video')
     OR type LIKE 'plugin:%'
   )
 );
