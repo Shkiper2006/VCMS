@@ -1,0 +1,18 @@
+{
+  "slug": "page",
+  "title": "Page",
+  "description": "Static or landing page assembled from reusable blocks.",
+  "collectionName": "pages",
+  "defaultStatus": "draft",
+  "api": {
+    "rest": true,
+    "graphql": true,
+    "publicRead": true
+  },
+  "fields": [
+    { "name": "title", "label": "Title", "kind": "string", "required": true },
+    { "name": "slug", "label": "Slug", "kind": "string", "required": true },
+    { "name": "excerpt", "label": "Meta description", "kind": "text" },
+    { "name": "blocks", "label": "Page blocks", "kind": "blocks", "required": true, "multiple": true }
+  ]
+}
