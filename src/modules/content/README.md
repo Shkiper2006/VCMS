@@ -11,4 +11,4 @@
 
 Постоянная модель описана таблицами `content_types`, `content_items`, `content_blocks`, `content_categories` и `content_tags`.
 
-План развития: заменить in-memory-хранилище PostgreSQL-репозиторием, добавить runtime-валидацию полей по схеме, ревизии, локализацию и workflow согласования.
+План развития: заменить in-memory-хранилище MySQL-репозиторием, добавить runtime-валидацию полей по схеме, ревизии, локализацию и workflow согласования.
