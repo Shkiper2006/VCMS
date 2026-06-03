@@ -622,6 +622,31 @@ export class ContentRepository {
     );
   }
 
+  updateDraft(
+    id: string,
+    actor: User,
+    input: Partial<Omit<ContentItem, 'id' | 'type' | 'status' | 'authorId' | 'createdAt' | 'updatedAt'>> = {},
+  ): ContentItem {
+    const item = this.getEditable(id, actor);
+
+    return this.save(
+      {
+        ...item,
+        title: input.title ?? item.title,
+        slug: input.slug ?? item.slug,
+        excerpt: input.excerpt ?? item.excerpt,
+        body: input.body ?? item.body,
+        blocks: input.blocks ?? item.blocks ?? [],
+        categoryIds: input.categoryIds ?? item.categoryIds,
+        tagIds: input.tagIds ?? item.tagIds,
+        scheduledFor: input.scheduledFor ?? item.scheduledFor,
+        publishedAt: input.publishedAt ?? item.publishedAt,
+        status: 'draft',
+      },
+      actor,
+    );
+  }
+
   addBlock<TData extends Record<string, unknown>>(
     contentId: string,
     type: BlockType,
