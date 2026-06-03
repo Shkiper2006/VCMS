@@ -1,3 +1,7 @@
 # Plugins module
 
-Plugin discovery, lifecycle hooks, manifests, and extension points will live here.
+Минимальная реализация находится в `PluginManager` и `HookBus` в `src/main.ts`.
+
+Плагин регистрируется через manifest и optional setup-функцию, которая подписывает обработчики на хуки CMS.
+
+План развития: загрузка плагинов из директории `plugins/`, изоляция кода, команды включения/выключения и UI управления плагинами.

@@ -1,5 +1,12 @@
 {
   "name": "Default",
   "version": "0.1.0",
-  "description": "Default starter theme for VCMS."
+  "description": "Default starter theme for VCMS.",
+  "templates": {
+    "home": "templates/home.html",
+    "post": "templates/post.html",
+    "page": "templates/page.html",
+    "category": "templates/category.html",
+    "search": "templates/search.html"
+  }
 }
