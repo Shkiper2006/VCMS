@@ -1,10 +1,15 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiService, type UpdateThemeLayoutDto, type UploadMediaDto } from './api.service';
 import { type ThemeTemplate } from '../../main';
+import { AuthService } from '../auth.service';
 
 @Controller('api')
 export class ResourcesController {
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly auth: AuthService,
+  ) {}
 
   @Get('blocks')
   listBlocks() {
@@ -22,8 +27,8 @@ export class ResourcesController {
   }
 
   @Get('users/me')
-  me() {
-    return this.api.me();
+  me(@Req() request: Request) {
+    return this.auth.getCurrentUser(request);
   }
 
   @Get('plugins')

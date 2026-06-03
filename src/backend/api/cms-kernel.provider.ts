@@ -1,9 +1,12 @@
 import { createCmsKernel, type CmsKernel, type User } from '../../main';
+import { loadDotEnv } from '../env';
+
+loadDotEnv();
 
 export const CMS_KERNEL = Symbol('CMS_KERNEL');
 export const CMS_CURRENT_USER = Symbol('CMS_CURRENT_USER');
 
-interface BackendCmsContext {
+export interface BackendCmsContext {
   kernel: CmsKernel;
   currentUser: User;
 }
@@ -37,14 +40,14 @@ function createBackendCmsContext(): BackendCmsContext {
   return { kernel, currentUser };
 }
 
-const context = createBackendCmsContext();
+export const CMS_CONTEXT = createBackendCmsContext();
 
 export const cmsKernelProvider = {
   provide: CMS_KERNEL,
-  useValue: context.kernel,
+  useValue: CMS_CONTEXT.kernel,
 };
 
 export const currentUserProvider = {
   provide: CMS_CURRENT_USER,
-  useValue: context.currentUser,
+  useValue: CMS_CONTEXT.currentUser,
 };

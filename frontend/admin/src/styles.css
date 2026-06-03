@@ -126,6 +126,7 @@ textarea {
 }
 
 .admin-topbar__actions a,
+.admin-topbar__actions button,
 .dashboard__actions a,
 .dashboard-card a,
 .login-card__submit {
@@ -247,6 +248,48 @@ textarea {
 .login-card__submit {
   border: 0;
   justify-content: center;
+}
+
+.login-card__submit:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.admin-topbar__actions button {
+  border: 0;
+  cursor: pointer;
+}
+
+.admin-topbar__user {
+  color: #50575e;
+  font-weight: 700;
+}
+
+.admin-auth-loading {
+  align-items: center;
+  background: #f0f0f1;
+  color: #50575e;
+  display: flex;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card__eyebrow {
+  color: #646970;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.login-card__error {
+  background: #fcf0f1;
+  border-left: 4px solid #d63638;
+  color: #8a2424;
+  margin: 0;
+  padding: 10px 12px;
 }
 
 .content-editor,
