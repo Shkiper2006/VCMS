@@ -2,7 +2,7 @@
 -- The TypeScript domain layer currently runs in-memory, while these tables
 -- describe the persistent model expected by the future NestJS/MySQL API.
 
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
   name VARCHAR(191) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
@@ -19,9 +19,14 @@ INSERT INTO modules (name, title, description, dependencies, api_namespace) VALU
   ('content', 'Declarative content engine', 'Content items, content type schemas and page blocks.', JSON_ARRAY('core', 'users'), '/api/content'),
   ('media', 'Media library', 'Reusable images and files for content blocks.', JSON_ARRAY('core', 'users'), '/api/media'),
   ('themes', 'Theme registry', 'Optional server-side rendering themes.', JSON_ARRAY('core', 'content'), '/api/themes'),
-  ('plugins', 'Plugin runtime', 'Hooks and custom content or block extensions.', JSON_ARRAY('core'), '/api/plugins');
+  ('plugins', 'Plugin runtime', 'Hooks and custom content or block extensions.', JSON_ARRAY('core'), '/api/plugins')
+ON DUPLICATE KEY UPDATE
+  title = VALUES(title),
+  description = VALUES(description),
+  dependencies = VALUES(dependencies),
+  api_namespace = VALUES(api_namespace);
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   email VARCHAR(191) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
@@ -31,7 +36,7 @@ CREATE TABLE users (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE site_settings (
+CREATE TABLE IF NOT EXISTS site_settings (
   id TINYINT(1) PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   site_name VARCHAR(255) NOT NULL,
   site_description TEXT NOT NULL,
@@ -39,7 +44,7 @@ CREATE TABLE site_settings (
   installed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE content_types (
+CREATE TABLE IF NOT EXISTS content_types (
   slug VARCHAR(191) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   description TEXT,
@@ -67,9 +72,14 @@ INSERT INTO content_types (slug, title, description, collection_name, `schema`) 
     'Editorial publication with body, categories and tags.',
     'posts',
     '{"fields":[{"name":"title","kind":"string","required":true},{"name":"slug","kind":"string","required":true},{"name":"excerpt","kind":"text"},{"name":"body","kind":"markdown","required":true},{"name":"categoryIds","kind":"relation","relationTo":"category","multiple":true},{"name":"tagIds","kind":"relation","relationTo":"tag","multiple":true}]}'
-  );
+  )
+ON DUPLICATE KEY UPDATE
+  title = VALUES(title),
+  description = VALUES(description),
+  collection_name = VALUES(collection_name),
+  `schema` = VALUES(`schema`);
 
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   slug VARCHAR(191) NOT NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
@@ -78,7 +88,7 @@ CREATE TABLE categories (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   slug VARCHAR(191) NOT NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
@@ -86,7 +96,7 @@ CREATE TABLE tags (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE content_items (
+CREATE TABLE IF NOT EXISTS content_items (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   type VARCHAR(191) NOT NULL,
   title VARCHAR(255) NOT NULL,
@@ -105,7 +115,7 @@ CREATE TABLE content_items (
   CONSTRAINT content_items_author_fk FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE content_blocks (
+CREATE TABLE IF NOT EXISTS content_blocks (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   content_id CHAR(36) NOT NULL,
   position INT NOT NULL,
@@ -120,7 +130,7 @@ CREATE TABLE content_blocks (
   CONSTRAINT content_blocks_content_fk FOREIGN KEY (content_id) REFERENCES content_items(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE content_categories (
+CREATE TABLE IF NOT EXISTS content_categories (
   content_id CHAR(36) NOT NULL,
   category_id CHAR(36) NOT NULL,
   PRIMARY KEY (content_id, category_id),
@@ -128,7 +138,7 @@ CREATE TABLE content_categories (
   CONSTRAINT content_categories_category_fk FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE content_tags (
+CREATE TABLE IF NOT EXISTS content_tags (
   content_id CHAR(36) NOT NULL,
   tag_id CHAR(36) NOT NULL,
   PRIMARY KEY (content_id, tag_id),
@@ -136,7 +146,7 @@ CREATE TABLE content_tags (
   CONSTRAINT content_tags_tag_fk FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE media_assets (
+CREATE TABLE IF NOT EXISTS media_assets (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   filename VARCHAR(255) NOT NULL,
   url VARCHAR(2048) NOT NULL,
@@ -148,7 +158,7 @@ CREATE TABLE media_assets (
   CONSTRAINT media_assets_created_by_fk FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE themes (
+CREATE TABLE IF NOT EXISTS themes (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   name VARCHAR(191) NOT NULL UNIQUE,
   version VARCHAR(100) NOT NULL,
@@ -160,7 +170,7 @@ CREATE TABLE themes (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE theme_layouts (
+CREATE TABLE IF NOT EXISTS theme_layouts (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   theme_id CHAR(36) NOT NULL,
   template ENUM('home', 'page', 'post', 'category', 'search') NOT NULL,
@@ -172,7 +182,7 @@ CREATE TABLE theme_layouts (
   CONSTRAINT theme_layouts_updated_by_fk FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE plugins (
+CREATE TABLE IF NOT EXISTS plugins (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   name VARCHAR(191) NOT NULL UNIQUE,
   version VARCHAR(100) NOT NULL,
@@ -183,7 +193,7 @@ CREATE TABLE plugins (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE api_endpoints (
+CREATE TABLE IF NOT EXISTS api_endpoints (
   id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
   kind ENUM('rest','graphql') NOT NULL,
   module_name VARCHAR(191) NOT NULL,
@@ -195,7 +205,7 @@ CREATE TABLE api_endpoints (
   CONSTRAINT api_endpoints_module_fk FOREIGN KEY (module_name) REFERENCES modules(name) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE headless_settings (
+CREATE TABLE IF NOT EXISTS headless_settings (
   id TINYINT(1) PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   enabled TINYINT(1) NOT NULL DEFAULT 1,
   admin_client_path VARCHAR(255) NOT NULL DEFAULT '/admin',
@@ -204,7 +214,8 @@ CREATE TABLE headless_settings (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO headless_settings (id, cors_origins) VALUES (1, JSON_ARRAY('*'));
+INSERT INTO headless_settings (id, cors_origins) VALUES (1, JSON_ARRAY('*'))
+ON DUPLICATE KEY UPDATE cors_origins = VALUES(cors_origins);
 
 CREATE INDEX content_items_status_scheduled_for_idx ON content_items (status, scheduled_for);
 CREATE UNIQUE INDEX only_one_active_theme ON themes (active_unique);

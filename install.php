@@ -51,6 +51,83 @@ function connectToDatabase(array $db): PDO
     ]);
 }
 
+function splitSqlStatements(string $sql): array
+{
+    $statements = [];
+    $current = '';
+    $quote = null;
+    $length = strlen($sql);
+
+    for ($index = 0; $index < $length; $index++) {
+        $character = $sql[$index];
+        $next = $index + 1 < $length ? $sql[$index + 1] : '';
+
+        if ($quote === null && $character === '-' && $next === '-') {
+            while ($index < $length && $sql[$index] !== "\n") {
+                $index++;
+            }
+            continue;
+        }
+
+        if ($quote === null && $character === '/' && $next === '*') {
+            $index += 2;
+            while ($index < $length - 1 && !($sql[$index] === '*' && $sql[$index + 1] === '/')) {
+                $index++;
+            }
+            $index++;
+            continue;
+        }
+
+        if (($character === "'" || $character === '"') && ($index === 0 || $sql[$index - 1] !== '\\')) {
+            if ($quote === null) {
+                $quote = $character;
+            } elseif ($quote === $character) {
+                $quote = null;
+            }
+        }
+
+        if ($quote === null && $character === ';') {
+            $statement = trim($current);
+            if ($statement !== '') {
+                $statements[] = $statement;
+            }
+            $current = '';
+            continue;
+        }
+
+        $current .= $character;
+    }
+
+    $statement = trim($current);
+    if ($statement !== '') {
+        $statements[] = $statement;
+    }
+
+    return $statements;
+}
+
+function isIgnorableMigrationException(PDOException $exception): bool
+{
+    $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+
+    return $driverCode === 1050 || $driverCode === 1061;
+}
+
+function executeMigration(PDO $pdo, string $migrationSql): void
+{
+    foreach (splitSqlStatements($migrationSql) as $statement) {
+        try {
+            $pdo->exec($statement);
+        } catch (PDOException $exception) {
+            if (isIgnorableMigrationException($exception)) {
+                continue;
+            }
+
+            throw $exception;
+        }
+    }
+}
+
 function envValue(string $value): string
 {
     if ($value === '') {
@@ -133,10 +210,10 @@ function runInstallation(array $site, array $db, array $admin): void
     }
 
     $pdo = connectToDatabase($db);
-    $pdo->beginTransaction();
 
     try {
-        $pdo->exec($migrationSql);
+        executeMigration($pdo, $migrationSql);
+        $pdo->beginTransaction();
 
         $passwordHash = password_hash($admin['password'], PASSWORD_DEFAULT);
         if ($passwordHash === false) {
@@ -144,7 +221,8 @@ function runInstallation(array $site, array $db, array $admin): void
         }
 
         $userStatement = $pdo->prepare(
-            "INSERT INTO users (email, password_hash, name, role) VALUES (:email, :password_hash, :name, 'admin')"
+            "INSERT INTO users (email, password_hash, name, role) VALUES (:email, :password_hash, :name, 'admin') "
+            . "ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), name = VALUES(name), role = VALUES(role)"
         );
         $userStatement->execute([
             ':email' => $admin['email'],
@@ -153,7 +231,9 @@ function runInstallation(array $site, array $db, array $admin): void
         ]);
 
         $settingsStatement = $pdo->prepare(
-            'INSERT INTO site_settings (id, site_name, site_description, site_url, installed_at) VALUES (TRUE, :site_name, :site_description, :site_url, NOW())'
+            'INSERT INTO site_settings (id, site_name, site_description, site_url, installed_at) '
+            . 'VALUES (1, :site_name, :site_description, :site_url, NOW()) '
+            . 'ON DUPLICATE KEY UPDATE site_name = VALUES(site_name), site_description = VALUES(site_description), site_url = VALUES(site_url)'
         );
         $settingsStatement->execute([
             ':site_name' => $site['name'],
