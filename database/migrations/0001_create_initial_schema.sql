@@ -166,6 +166,17 @@ CREATE TABLE themes (
 
 CREATE UNIQUE INDEX only_one_active_theme ON themes (is_active) WHERE is_active;
 
+CREATE TABLE theme_layouts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  theme_id UUID NOT NULL REFERENCES themes(id) ON DELETE CASCADE,
+  template TEXT NOT NULL,
+  layout_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (theme_id, template),
+  CHECK (template IN ('home', 'page', 'post', 'category', 'search'))
+);
+
 CREATE TABLE plugins (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
@@ -203,3 +214,4 @@ CREATE INDEX content_items_status_scheduled_for_idx ON content_items (status, sc
 CREATE INDEX content_items_title_body_search_idx ON content_items USING gin (to_tsvector('simple', title || ' ' || body));
 CREATE INDEX content_blocks_content_position_idx ON content_blocks (content_id, position);
 CREATE INDEX media_assets_mime_type_idx ON media_assets (mime_type);
+CREATE INDEX theme_layouts_theme_template_idx ON theme_layouts (theme_id, template);

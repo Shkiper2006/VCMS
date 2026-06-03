@@ -8,5 +8,199 @@
     "page": "templates/page.html",
     "category": "templates/category.html",
     "search": "templates/search.html"
+  },
+  "regions": [
+    {
+      "id": "default-header",
+      "template": "home",
+      "name": "header",
+      "label": "Global header",
+      "x": 0,
+      "y": 0,
+      "width": 1200,
+      "height": 96,
+      "order": 0,
+      "editable": true,
+      "blocks": [],
+      "responsive": {
+        "tablet": { "height": 88 },
+        "mobile": { "height": 72 }
+      }
+    },
+    {
+      "id": "default-main",
+      "template": "home",
+      "name": "main",
+      "label": "Main content",
+      "x": 0,
+      "y": 96,
+      "width": 1200,
+      "height": 720,
+      "order": 1,
+      "editable": true,
+      "blocks": [],
+      "responsive": {
+        "tablet": { "y": 88, "width": 768 },
+        "mobile": { "y": 72, "width": 390 }
+      }
+    },
+    {
+      "id": "default-footer",
+      "template": "home",
+      "name": "footer",
+      "label": "Global footer",
+      "x": 0,
+      "y": 816,
+      "width": 1200,
+      "height": 160,
+      "order": 2,
+      "editable": true,
+      "blocks": [],
+      "responsive": {
+        "tablet": { "y": 808, "width": 768 },
+        "mobile": { "y": 760, "width": 390 }
+      }
+    }
+  ],
+  "editableTemplates": {
+    "home": {
+      "themeId": "default",
+      "template": "home",
+      "canvas": { "width": 1200, "height": 976, "breakpoint": "desktop" },
+      "regions": [
+        {
+          "id": "home-hero",
+          "template": "home",
+          "name": "hero",
+          "label": "Hero",
+          "x": 40,
+          "y": 120,
+          "width": 1120,
+          "height": 360,
+          "order": 0,
+          "editable": true,
+          "blocks": [
+            {
+              "id": "home-hero-title",
+              "template": "home",
+              "regionId": "home-hero",
+              "type": "text",
+              "label": "Hero title",
+              "x": 80,
+              "y": 160,
+              "width": 520,
+              "height": 120,
+              "order": 0,
+              "margin": { "top": 0, "right": 0, "bottom": 24, "left": 0 },
+              "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+              "settings": { "contentKey": "home.hero.title" },
+              "responsive": {
+                "mobile": { "x": 24, "y": 112, "width": 342, "height": 140, "order": 0 }
+              }
+            }
+          ],
+          "responsive": {
+            "tablet": { "x": 32, "width": 704 },
+            "mobile": { "x": 16, "y": 88, "width": 358, "height": 420 }
+          }
+        },
+        {
+          "id": "home-featured",
+          "template": "home",
+          "name": "featured",
+          "label": "Featured blocks",
+          "x": 40,
+          "y": 520,
+          "width": 1120,
+          "height": 320,
+          "order": 1,
+          "editable": true,
+          "blocks": []
+        }
+      ]
+    },
+    "page": {
+      "themeId": "default",
+      "template": "page",
+      "canvas": { "width": 1200, "height": 900, "breakpoint": "desktop" },
+      "regions": [
+        {
+          "id": "page-content",
+          "template": "page",
+          "name": "content",
+          "label": "Page content",
+          "x": 120,
+          "y": 120,
+          "width": 760,
+          "height": 560,
+          "order": 0,
+          "editable": true,
+          "blocks": [
+            {
+              "id": "page-body-slot",
+              "template": "page",
+              "regionId": "page-content",
+              "type": "content",
+              "label": "Page body",
+              "x": 140,
+              "y": 160,
+              "width": 720,
+              "height": 420,
+              "order": 0,
+              "margin": { "top": 0, "right": 0, "bottom": 32, "left": 0 },
+              "padding": { "top": 24, "right": 24, "bottom": 24, "left": 24 }
+            }
+          ]
+        },
+        {
+          "id": "page-sidebar",
+          "template": "page",
+          "name": "sidebar",
+          "label": "Sidebar",
+          "x": 920,
+          "y": 120,
+          "width": 260,
+          "height": 560,
+          "order": 1,
+          "editable": true,
+          "blocks": []
+        }
+      ]
+    },
+    "post": {
+      "themeId": "default",
+      "template": "post",
+      "canvas": { "width": 1200, "height": 980, "breakpoint": "desktop" },
+      "regions": [
+        {
+          "id": "post-article",
+          "template": "post",
+          "name": "article",
+          "label": "Article",
+          "x": 160,
+          "y": 128,
+          "width": 760,
+          "height": 680,
+          "order": 0,
+          "editable": true,
+          "blocks": [
+            {
+              "id": "post-title-slot",
+              "template": "post",
+              "regionId": "post-article",
+              "type": "content",
+              "label": "Post title and body",
+              "x": 184,
+              "y": 160,
+              "width": 712,
+              "height": 560,
+              "order": 0,
+              "margin": { "top": 0, "right": 0, "bottom": 40, "left": 0 },
+              "padding": { "top": 24, "right": 24, "bottom": 24, "left": 24 }
+            }
+          ]
+        }
+      ]
+    }
   }
 }
