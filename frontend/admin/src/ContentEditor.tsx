@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import './content-editor.css';
 
 type ContentStatus = 'draft' | 'scheduled' | 'published' | 'archived';
@@ -37,18 +38,29 @@ const blockPalette: BlockDefinition[] = [
   { type: 'form', title: 'Форма', description: 'Простая форма с действием отправки.', defaultData: { fields: [], submitLabel: 'Submit', action: 'email' } },
 ];
 
-const initialDraft: ContentItem = {
-  id: 'draft-local',
-  type: 'page',
-  title: 'Новая страница',
-  slug: 'new-page',
-  body: '',
-  status: 'draft',
-  blocks: [],
-};
+function createInitialDraft(type = 'page', id = 'draft-local'): ContentItem {
+  const normalizedType = type === 'post' ? 'post' : 'page';
+  const title = normalizedType === 'post' ? 'Новая запись' : 'Новая страница';
+
+  return {
+    id,
+    type: normalizedType,
+    title,
+    slug: normalizedType === 'post' ? 'new-post' : 'new-page',
+    body: '',
+    status: 'draft',
+    blocks: [],
+  };
+}
 
 export function ContentEditor(): JSX.Element {
+  const { type, id } = useParams();
+  const initialDraft = useMemo(() => createInitialDraft(type, id ?? 'draft-local'), [id, type]);
   const [item, setItem] = useState<ContentItem>(initialDraft);
+
+  useEffect(() => {
+    setItem(initialDraft);
+  }, [initialDraft]);
   const [selectedBlockId, setSelectedBlockId] = useState<string>();
   const [status, setStatus] = useState('Черновик готов к редактированию.');
   const selectedBlock = item.blocks.find((block) => block.id === selectedBlockId);
