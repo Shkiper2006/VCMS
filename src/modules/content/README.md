@@ -1,3 +1,7 @@
 # Content module
 
-Core content models, page builders, publication workflow, and routing rules will live here.
+Минимальная реализация находится в `ContentRepository` в `src/main.ts`.
+
+Поддерживаются страницы, посты, категории, теги, черновики, немедленная публикация, отложенная публикация и публикация всех материалов, срок которых наступил (`publishDue`).
+
+План развития: вынести репозиторий в отдельный модуль NestJS, подключить PostgreSQL, добавить ревизии, медиафайлы и валидацию уникальности slug на уровне приложения.
