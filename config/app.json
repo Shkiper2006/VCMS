@@ -1,0 +1,16 @@
+{
+  "name": "VCMS",
+  "stack": {
+    "backend": "Node.js + NestJS",
+    "admin": "React",
+    "database": "PostgreSQL"
+  },
+  "paths": {
+    "engine": "src/",
+    "public": "public/",
+    "admin": "frontend/admin/",
+    "themes": "themes/",
+    "plugins": "plugins/",
+    "migrations": "database/migrations/"
+  }
+}

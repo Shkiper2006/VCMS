@@ -1,0 +1,2 @@
+-- Initial PostgreSQL schema placeholder for VCMS.
+-- Add tables for users, roles, content, themes, and plugins as the engine evolves.
