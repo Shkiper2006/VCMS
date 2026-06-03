@@ -7,7 +7,7 @@
     "dev": "echo \"Start backend (NestJS) and admin (React) after installing dependencies\"",
     "dev:backend": "echo \"Run NestJS API from src/ after dependencies are installed\"",
     "dev:admin": "echo \"Run React admin app from frontend/admin/ after dependencies are installed\"",
-    "migrate": "echo \"Run PostgreSQL migrations from database/migrations/\"",
+    "migrate": "echo \"Run MySQL migrations from database/migrations/\"",
     "check": "tsc --noEmit"
   },
   "engines": {

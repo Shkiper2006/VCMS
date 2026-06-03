@@ -35,7 +35,7 @@ function redirectToStep(int $step): never
 function dbDsn(array $db): string
 {
     return sprintf(
-        'pgsql:host=%s;port=%s;dbname=%s',
+        'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
         $db['host'],
         $db['port'],
         $db['database']
@@ -47,6 +47,7 @@ function connectToDatabase(array $db): PDO
     return new PDO(dbDsn($db), $db['username'], $db['password'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
     ]);
 }
 
@@ -68,6 +69,7 @@ function writeEnvironmentFile(array $site, array $db): void
     $values = [
         'APP_NAME' => $site['name'],
         'APP_URL' => $site['url'],
+        'DB_CONNECTION' => 'mysql',
         'DB_HOST' => $db['host'],
         'DB_PORT' => $db['port'],
         'DB_DATABASE' => $db['database'],
@@ -151,7 +153,7 @@ function runInstallation(array $site, array $db, array $admin): void
         ]);
 
         $settingsStatement = $pdo->prepare(
-            'INSERT INTO site_settings (id, site_name, site_description, site_url, installed_at) VALUES (true, :site_name, :site_description, :site_url, now())'
+            'INSERT INTO site_settings (id, site_name, site_description, site_url, installed_at) VALUES (TRUE, :site_name, :site_description, :site_url, NOW())'
         );
         $settingsStatement->execute([
             ':site_name' => $site['name'],
@@ -195,7 +197,7 @@ function validateDatabase(array $input): array
 {
     $db = [
         'host' => trim((string) ($input['db_host'] ?? 'localhost')),
-        'port' => trim((string) ($input['db_port'] ?? '5432')),
+        'port' => trim((string) ($input['db_port'] ?? '3306')),
         'database' => trim((string) ($input['db_database'] ?? '')),
         'username' => trim((string) ($input['db_username'] ?? '')),
         'password' => (string) ($input['db_password'] ?? ''),
@@ -203,16 +205,16 @@ function validateDatabase(array $input): array
 
     $errors = [];
     if ($db['host'] === '') {
-        $errors[] = 'Укажите хост PostgreSQL.';
+        $errors[] = 'Укажите хост MySQL.';
     }
     if (filter_var($db['port'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]) === false) {
-        $errors[] = 'Укажите корректный порт PostgreSQL.';
+        $errors[] = 'Укажите корректный порт MySQL.';
     }
     if ($db['database'] === '') {
         $errors[] = 'Укажите имя базы данных.';
     }
     if ($db['username'] === '') {
-        $errors[] = 'Укажите имя пользователя PostgreSQL.';
+        $errors[] = 'Укажите имя пользователя MySQL.';
     }
 
     return [$db, $errors];
@@ -294,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 connectToDatabase($db);
             } catch (Throwable $exception) {
-                $errors[] = 'Не удалось подключиться к PostgreSQL: ' . $exception->getMessage();
+                $errors[] = 'Не удалось подключиться к MySQL: ' . $exception->getMessage();
             }
         }
 
@@ -333,7 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $stepTitles = [
     1 => 'Сайт',
-    2 => 'PostgreSQL',
+    2 => 'MySQL',
     3 => 'Администратор',
     4 => 'Установка',
 ];
@@ -378,7 +380,7 @@ CSS;
         <a class="button" href="<?= h($installedSiteUrl ?? '/') ?>">Перейти на сайт</a>
     <?php else: ?>
         <h1>Установка VCMS</h1>
-        <p>Заполните параметры сайта, подключение к PostgreSQL и учетную запись первого администратора.</p>
+        <p>Заполните параметры сайта, подключение к MySQL и учетную запись первого администратора.</p>
 
         <div class="steps" aria-label="Шаги установки">
             <?php foreach ($stepTitles as $number => $title): ?>
@@ -414,19 +416,19 @@ CSS;
         <?php elseif ($step === 2): ?>
             <form method="post">
                 <input type="hidden" name="step" value="2">
-                <label>Хост PostgreSQL
+                <label>Хост MySQL
                     <input name="db_host" required value="<?= h(old('db', 'host', 'localhost')) ?>">
                 </label>
-                <label>Порт PostgreSQL
-                    <input name="db_port" required inputmode="numeric" value="<?= h(old('db', 'port', '5432')) ?>">
+                <label>Порт MySQL
+                    <input name="db_port" required inputmode="numeric" value="<?= h(old('db', 'port', '3306')) ?>">
                 </label>
                 <label>Имя базы данных
                     <input name="db_database" required value="<?= h(old('db', 'database', 'vcms')) ?>">
                 </label>
-                <label>Пользователь PostgreSQL
+                <label>Пользователь MySQL
                     <input name="db_username" required value="<?= h(old('db', 'username', 'vcms')) ?>">
                 </label>
-                <label>Пароль PostgreSQL
+                <label>Пароль MySQL
                     <input name="db_password" type="password" value="<?= h(old('db', 'password', 'secret')) ?>">
                 </label>
                 <div class="actions">

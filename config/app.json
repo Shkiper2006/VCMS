@@ -3,7 +3,7 @@
   "stack": {
     "backend": "Node.js + NestJS",
     "admin": "React",
-    "database": "PostgreSQL"
+    "database": "MySQL"
   },
   "paths": {
     "engine": "src/",

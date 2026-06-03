@@ -41,7 +41,7 @@ React-based administrative panel for managing content, content type schemas, blo
 - `PATCH /api/themes/active/layout?template=home&preview=true` — сохранение preview layout без публикации;
 - `PATCH /api/themes/active/layout?template=home&preview=false` — публикация layout активной темы и сброс соответствующего preview-черновика.
 
-Права доступа для редактора тем добавлены как `themes:manage` и выдаются ролям, которым разрешено изменять внешний вид сайта. Layout сохраняется в будущей PostgreSQL-таблице `theme_layouts`, а manifest темы может поставлять начальные `regions` и `editableTemplates` для bootstrap-состояния.
+Права доступа для редактора тем добавлены как `themes:manage` и выдаются ролям, которым разрешено изменять внешний вид сайта. Layout сохраняется в будущей MySQL-таблице `theme_layouts`, а manifest темы может поставлять начальные `regions` и `editableTemplates` для bootstrap-состояния.
 
 
 ## Block content editor
