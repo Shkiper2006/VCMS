@@ -1,0 +1,276 @@
+:root {
+  color: #1d2327;
+  background: #f0f0f1;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background: #1d2327;
+  color: #f0f0f1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 22px 16px;
+}
+
+.admin-sidebar__brand {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  padding: 0 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-sidebar__brand small {
+  color: #a7aaad;
+  display: block;
+  margin-top: 2px;
+}
+
+.admin-sidebar__logo {
+  align-items: center;
+  background: #2271b1;
+  border-radius: 10px;
+  color: #fff;
+  display: inline-flex;
+  font-weight: 800;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.admin-sidebar__nav {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-sidebar__nav a {
+  border-radius: 6px;
+  color: #c3c4c7;
+  padding: 11px 12px;
+}
+
+.admin-sidebar__nav a:hover,
+.admin-sidebar__nav a.active {
+  background: #2271b1;
+  color: #fff;
+}
+
+.admin-shell__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-topbar {
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #dcdcde;
+  display: flex;
+  justify-content: space-between;
+  min-height: 78px;
+  padding: 16px 28px;
+}
+
+.admin-topbar h1 {
+  font-size: 1.45rem;
+  margin: 0;
+}
+
+.admin-topbar__eyebrow,
+.dashboard__eyebrow {
+  color: #646970;
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.admin-topbar__actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-topbar__actions a,
+.dashboard__actions a,
+.dashboard-card a,
+.login-card__submit {
+  background: #2271b1;
+  border-radius: 4px;
+  color: #fff;
+  display: inline-flex;
+  font-weight: 700;
+  padding: 9px 13px;
+}
+
+.admin-workspace {
+  flex: 1;
+  min-width: 0;
+  padding: 28px;
+}
+
+.dashboard {
+  display: grid;
+  gap: 24px;
+}
+
+.dashboard__hero,
+.section-page,
+.login-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+}
+
+.dashboard__hero h2,
+.section-page h2 {
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  margin: 0 0 10px;
+}
+
+.dashboard__hero p,
+.section-page p,
+.dashboard-card p {
+  color: #50575e;
+  line-height: 1.6;
+}
+
+.dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dashboard__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.dashboard-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.dashboard-card span {
+  color: #2271b1;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dashboard-card h3 {
+  margin: 10px 0 8px;
+}
+
+.section-page__panel {
+  background: #f6f7f7;
+  border-left: 4px solid #2271b1;
+  display: grid;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.login-page {
+  align-items: center;
+  background: linear-gradient(135deg, #1d2327, #2c3338);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.login-card {
+  display: grid;
+  gap: 16px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.login-card h1 {
+  margin: 0;
+}
+
+.login-card label {
+  color: #50575e;
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.login-card input {
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.login-card__submit {
+  border: 0;
+  justify-content: center;
+}
+
+.content-editor,
+.theme-editor {
+  margin: -28px;
+  min-height: calc(100vh - 78px);
+}
+
+@media (max-width: 900px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
+  }
+
+  .admin-sidebar__nav {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .admin-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
