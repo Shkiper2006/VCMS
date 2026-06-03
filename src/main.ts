@@ -552,6 +552,11 @@ export class InMemoryUserService {
     return [...this.users.values()];
   }
 
+  findByEmail(email: string): User | undefined {
+    const normalizedEmail = email.trim().toLowerCase();
+    return [...this.users.values()].find((candidate) => candidate.email.toLowerCase() === normalizedEmail);
+  }
+
   login(email: string, passwordHash: string): Session {
     const user = [...this.users.values()].find((candidate) => candidate.email === email);
     if (!user || user.passwordHash !== passwordHash) {
@@ -1035,6 +1040,7 @@ export const PUBLIC_ROUTES: RouteDefinition[] = [
 ];
 
 export const API_ROUTES: ApiEndpoint[] = [
+  { method: 'POST', path: '/api/auth/login', area: 'api', kind: 'rest', module: 'users', name: 'Authenticate admin user', headlessReady: true },
   { method: 'GET', path: '/api/content-types', area: 'api', kind: 'rest', module: 'content', name: 'List content type schemas', headlessReady: true },
   { method: 'GET', path: '/api/content/:type', area: 'api', kind: 'rest', module: 'content', name: 'List content by type', headlessReady: true },
   { method: 'POST', path: '/api/content/:type', area: 'api', kind: 'rest', module: 'content', name: 'Create content item', requiredPermission: 'content:create', headlessReady: true },

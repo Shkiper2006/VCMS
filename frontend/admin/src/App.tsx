@@ -1,6 +1,8 @@
-import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { ContentEditor } from './ContentEditor';
 import { ThemeEditor } from './ThemeEditor';
+import { LoginPage } from './LoginPage';
+import { useAuth } from './auth';
 
 interface AdminRoute {
   path: string;
@@ -31,7 +33,7 @@ export function App(): JSX.Element {
     <Routes>
       <Route path="/" element={<Navigate to="/admin" replace />} />
       <Route path="/admin/login" element={<LoginPage />} />
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
         <Route path="posts" element={<ContentEditor />} />
         <Route path="pages" element={<ContentEditor />} />
@@ -47,7 +49,24 @@ export function App(): JSX.Element {
   );
 }
 
+function RequireAuth({ children }: { children: JSX.Element }): JSX.Element {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <main className="admin-auth-loading">Проверяем сессию…</main>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
+
 function AdminLayout(): JSX.Element {
+  const { user, logout } = useAuth();
+
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Главное меню админки">
@@ -75,8 +94,9 @@ function AdminLayout(): JSX.Element {
             <h1>Панель управления</h1>
           </div>
           <div className="admin-topbar__actions">
+            {user ? <span className="admin-topbar__user">{user.name} · {user.role}</span> : null}
             <a href="/" target="_blank" rel="noreferrer">Открыть сайт</a>
-            <NavLink to="/admin/login">Выйти</NavLink>
+            <button type="button" onClick={logout}>Выйти</button>
           </div>
         </header>
         <main className="admin-workspace">
@@ -127,25 +147,5 @@ function SectionPage({ section }: { section: string }): JSX.Element {
         <span>Подключить REST/GraphQL endpoints ядра и заменить mock-метрики реальными данными.</span>
       </div>
     </section>
-  );
-}
-
-function LoginPage(): JSX.Element {
-  return (
-    <main className="login-page">
-      <form className="login-card">
-        <span className="admin-sidebar__logo">V</span>
-        <h1>Вход в VCMS</h1>
-        <label>
-          Email
-          <input type="email" placeholder="admin@example.test" />
-        </label>
-        <label>
-          Password
-          <input type="password" placeholder="••••••••" />
-        </label>
-        <NavLink className="login-card__submit" to="/admin">Войти</NavLink>
-      </form>
-    </main>
   );
 }

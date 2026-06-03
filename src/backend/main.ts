@@ -5,6 +5,9 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DEFAULT_HEADLESS_CONFIG } from '../main';
 import { AppModule } from './app.module';
+import { loadDotEnv } from './env';
+
+loadDotEnv();
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
