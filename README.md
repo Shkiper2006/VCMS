@@ -116,9 +116,12 @@ API для редактора включает создание черновик
 - `GET /admin/pages` — управление страницами;
 - `GET /admin/content-types` — схемы типов контента;
 - `GET /admin/media` — медиатека;
-- `GET /admin/users` — управление пользователями.
+- `GET /admin/users` — управление пользователями;
+- `GET /admin/plugins` — управление плагинами;
+- `GET /admin/themes` — управление темами;
+- `GET /admin/themes/editor` — визуальный редактор активной темы.
 
-React-приложение админки остается отдельной заготовкой в `frontend/admin/` и должно подключиться к API после добавления NestJS transport layer.
+React-приложение админки находится в `frontend/admin/` и запускается как Vite + React + TypeScript workspace. В dev-режиме точка входа в админку: `http://localhost:5173/admin`; экран входа доступен по `http://localhost:5173/admin/login`. Клиент должен подключиться к API после добавления NestJS transport layer.
 
 ## Публичный сайт
 
@@ -213,14 +216,23 @@ cp .env.example .env
 
 4. Откройте `http://localhost:8080/install.php` и пройдите шаги установки: параметры сайта, данные MySQL, данные администратора и подтверждение запуска миграции.
 5. Если вы не используете веб-установщик, скопируйте `.env.example` в `.env`, настройте переменные окружения и выполните SQL из `database/migrations/0001_create_initial_schema.sql` вручную.
-6. Установите зависимости после добавления реальных пакетов backend/admin:
+6. Установите зависимости проекта и admin workspace:
 
    ```bash
    npm install
    ```
 
-7. Запустите проверку TypeScript:
+7. Запустите админ-панель в dev-режиме:
+
+   ```bash
+   npm run dev:admin
+   ```
+
+   Затем откройте `http://localhost:5173/admin` для dashboard или `http://localhost:5173/admin/login` для экрана входа.
+
+8. Запустите проверку TypeScript:
 
    ```bash
    npm run check
+   npm run check:admin
    ```
